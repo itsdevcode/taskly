@@ -23,6 +23,7 @@ import {
   Sun,
   Trash2,
   X,
+  FileText,
 } from "lucide-react";
 import { api, desktop, errorMessage } from "./lib/api";
 import {
@@ -37,6 +38,7 @@ import {
 } from "./lib/tasks";
 import { Dialog } from "./components/Dialog";
 import { TaskForm } from "./features/tasks/TaskForm";
+import { PagesWorkspace } from "./features/pages/PagesWorkspace";
 
 const views = [
   {
@@ -75,6 +77,8 @@ function initialTheme(): Theme {
 }
 export default function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [section, setSection] = useState<"tasks" | "pages">("tasks");
+  const [pageCount, setPageCount] = useState(0);
   const [view, setView] = useState<View>("all");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<"smart" | "due" | "created">("smart");
@@ -137,6 +141,7 @@ export default function App() {
   const modalOpen = form !== undefined || !!details || !!deleting || settings;
   useEffect(() => {
     function key(event: KeyboardEvent) {
+      if (section === "pages") return;
       if ((event.ctrlKey || event.metaKey) && !event.altKey) {
         if (event.key.toLowerCase() === "n" && !modalOpen && desktop) {
           event.preventDefault();
@@ -150,7 +155,7 @@ export default function App() {
     }
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [modalOpen]);
+  }, [modalOpen, section]);
   useEffect(() => {
     if (!notice) return;
     const timer = setTimeout(() => setNotice(""), 3500);
@@ -238,6 +243,7 @@ export default function App() {
           onClick={(e) => {
             e.preventDefault();
             setView("all");
+            setSection("tasks");
           }}
           aria-label="Taskly home"
         >
@@ -251,18 +257,32 @@ export default function App() {
           {views.map((item) => (
             <button
               key={item.id}
-              className={`nav-item ${view === item.id ? "active" : ""}`}
+              title={item.label}
+              className={`nav-item ${section === "tasks" && view === item.id ? "active" : ""}`}
               onClick={() => {
                 setView(item.id);
+                setSection("tasks");
                 setSort("smart");
               }}
-              aria-current={view === item.id ? "page" : undefined}
+              aria-current={
+                section === "tasks" && view === item.id ? "page" : undefined
+              }
             >
               <item.icon size={19} />
               <span>{item.label}</span>
               <span className="nav-count">{counts[item.id]}</span>
             </button>
           ))}
+          <button
+            title="Pages"
+            className={`nav-item ${section === "pages" ? "active" : ""}`}
+            aria-current={section === "pages" ? "page" : undefined}
+            onClick={() => setSection("pages")}
+          >
+            <FileText size={19} />
+            <span>Pages</span>
+            <span className="nav-count">{pageCount}</span>
+          </button>
         </nav>
         <div className="sidebar-note">
           <span className="note-icon">
@@ -291,7 +311,7 @@ export default function App() {
         <header className="topbar">
           <span className="breadcrumb">
             My workspace <ChevronRight size={14} />
-            <span>{active.label}</span>
+            <span>{section === "pages" ? "Pages" : active.label}</span>
           </span>
           <span className="top-date">
             {new Date(`${today}T12:00:00`).toLocaleDateString(undefined, {
@@ -301,7 +321,15 @@ export default function App() {
             })}
           </span>
         </header>
-        <main>
+        <PagesWorkspace
+          active={section === "pages" && !modalOpen}
+          onCountChange={setPageCount}
+          onNeedsAttention={() => {
+            setSection("pages");
+            setSettings(false);
+          }}
+        />
+        <main hidden={section === "pages"}>
           <div className="heading-row">
             <div>
               <div className="eyebrow">A LITTLE FOCUS GOES A LONG WAY</div>

@@ -3,6 +3,7 @@ use crate::{
     models::{Status, Task},
 };
 use rusqlite::{params, Connection, OptionalExtension, Row};
+pub mod pages;
 fn row_task(row: &Row<'_>) -> rusqlite::Result<Task> {
     let status: String = row.get(3)?;
     let status = match status.as_str() {

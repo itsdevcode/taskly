@@ -7,6 +7,31 @@ use rusqlite::Connection;
 use std::sync::Mutex;
 use tauri::State;
 pub struct Database(pub Mutex<Connection>);
+#[tauri::command]
+pub fn list_pages(
+    db: State<'_, Database>,
+) -> Result<Vec<crate::models::pages::Page>, CommandError> {
+    with_db(db, repository::pages::list)
+}
+#[tauri::command]
+pub fn create_page(
+    db: State<'_, Database>,
+    input: crate::models::pages::PageInput,
+) -> Result<crate::models::pages::Page, CommandError> {
+    with_db(db, |c| services::pages::create(c, input))
+}
+#[tauri::command]
+pub fn update_page(
+    db: State<'_, Database>,
+    id: String,
+    input: crate::models::pages::PageInput,
+) -> Result<crate::models::pages::Page, CommandError> {
+    with_db(db, |c| services::pages::update(c, &id, input))
+}
+#[tauri::command]
+pub fn delete_page(db: State<'_, Database>, id: String) -> Result<(), CommandError> {
+    with_db(db, |c| repository::pages::delete(c, &id))
+}
 fn with_db<T>(
     state: State<'_, Database>,
     operation: impl FnOnce(&Connection) -> Result<T, Error>,

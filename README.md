@@ -40,7 +40,17 @@ For future macOS/Linux packaging, install the [platform prerequisites](https://v
 - Ctrl/Cmd+N creates a task; Ctrl/Cmd+F focuses search. Escape closes a dialog. Enter submits a task form from a single-line field; Enter in the description inserts a newline.
 - Settings includes Light, Dark, and System themes, remembered on the device. Native modal dialogs trap focus and return it to the previous control.
 
-## Data and architecture
+## Pages and notes
+
+Choose **Pages** in the sidebar to create local notes. Each page has a title and editable blocks: text, headings, subheadings, bullets, checklists, quotes, and dividers. Use a block's type selector to change it, arrows to reorder it, and its trash button to remove it. Enter creates the next block; Shift+Enter inserts a line. Search matches page titles and block content.
+
+Edits autosave after 600 ms of inactivity. Save or Ctrl/Cmd+S saves immediately. In Pages, Ctrl/Cmd+N creates a page and Ctrl/Cmd+F searches pages. Switching pages waits for outstanding saves; failed saves keep the draft available with a Retry action. A normal native window close waits for page saves and keeps the window open if saving fails. Deleting a page requires confirmation. Force-ending the process can still lose unsaved edits.
+
+Pages use SQLite schema version 2 (`002_pages.sql`), with structured JSON blocks, UUIDs, and UTC timestamps. The migration preserves existing tasks. This editor provides local block notes; it does not include Notion cloud collaboration or databases.
+
+Feature branch: `feat/local-pages`. Suggested commit: `feat: add local pages with an autosaving block editor`.
+
+## Storage details
 
 `src-tauri/src/db` initializes SQLite and applies migrations transactionally using `PRAGMA user_version`. The first migration lives in `src-tauri/migrations/001_initial.sql`; subsequent migrations should increment the version and run in the same transaction. Updates must retain the application identifier `com.taskly.desktop` so they retain the data path.
 

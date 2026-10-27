@@ -1,7 +1,8 @@
 // Optional Windows smoke test against the built WebView2 executable.
 // Requires WebView2 remote debugging, which is enabled only for this process.
 import { chromium } from "@playwright/test";
-import { spawn } from "node:child_process";
+import { spawn, execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { setTimeout as delay } from "node:timers/promises";
 import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
@@ -85,8 +86,51 @@ try {
     .click();
   await page.getByRole("button", { name: "Delete task", exact: true }).click();
   await page.getByText(title, { exact: true }).waitFor({ state: "detached" });
+  const pageTitle = `Native notes ${Date.now()}`;
+  await page.getByRole("button", { name: /^Pages \d/ }).click();
+  await page.getByRole("button", { name: "New page", exact: true }).click();
+  await page.getByLabel("Page title").fill(pageTitle);
+  await page
+    .getByLabel("Text block 1", { exact: true })
+    .fill("Saved before the window closes.");
+  // A real WM_CLOSE request exercises the native close-save handler.
+  await promisify(execFile)(
+    "powershell.exe",
+    [
+      "-NoProfile",
+      "-Command",
+      `(Get-Process -Id ${processHandle.pid}).CloseMainWindow()`,
+    ],
+    { windowsHide: true },
+  );
+  for (
+    let attempt = 0;
+    attempt < 30 && processHandle.exitCode === null;
+    attempt++
+  )
+    await delay(200);
+  if (processHandle.exitCode === null)
+    throw new Error("The native window did not close after saving.");
+  await stop();
+  page = await launch();
+  await page.getByRole("button", { name: /^Pages \d/ }).click();
+  await page.getByRole("button", { name: new RegExp(pageTitle) }).click();
+  if (
+    (await page.getByLabel("Text block 1", { exact: true }).inputValue()) !==
+    "Saved before the window closes."
+  )
+    throw new Error("Page content did not persist.");
+  await page.screenshot({ path: "artifacts/native-pages.png" });
+  await page.getByRole("button", { name: "Delete page", exact: true }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Delete page", exact: true })
+    .click();
+  await page
+    .getByRole("heading", { name: "A home for your next idea." })
+    .waitFor();
   console.log(
-    "Native WebView2 / Rust IPC / SQLite CRUD and restart persistence passed.",
+    "Native task and page CRUD, close-save, and SQLite restart persistence passed.",
   );
 } finally {
   await stop();
