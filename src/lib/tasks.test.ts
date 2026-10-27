@@ -1,10 +1,84 @@
-import { describe, expect, it } from 'vitest';
-import { classify, dateLabel, isOverdue, localDate, selectTasks, type Task } from './tasks';
-const task=(dueDate:string|null,status:Task['status']='pending',id='1'):Task=>({id,title:'Read a book',description:'A quiet hour',dueDate,status,createdAt:'2026-10-27T03:00:00Z',updatedAt:'2026-10-27T03:00:00Z',completedAt:status==='completed'?'2026-10-27T04:00:00Z':null});
-describe('calendar-based views',()=>{
-  it('assigns exactly one view regardless of due date',()=>{for(const due of [null,'2026-10-26','2026-10-27','2026-10-28']){const t=task(due);expect(classify(t,'2026-10-27')).toBe(due&&due>'2026-10-27'?'upcoming':'pending');expect(classify({...t,status:'completed'},'2026-10-27')).toBe('completed');}});
-  it('flags only incomplete tasks before today',()=>{expect(isOverdue(task('2026-10-26'),'2026-10-27')).toBe(true);for(const t of [task(null),task('2026-10-27'),task('2026-10-28'),task('2026-10-26','completed')])expect(isOverdue(t,'2026-10-27')).toBe(false);});
-  it('uses local date components near midnight rather than ISO UTC',()=>{const local=new Date(2026,9,27,0,1);expect(localDate(local)).toBe('2026-10-27');expect(dateLabel('2027-01-01','2026-12-31')).toBe('Tomorrow');expect(dateLabel('2026-11-02','2026-11-01')).toBe('Tomorrow');});
-  it('filters descriptions case-insensitively and orders overdue, today, undated',()=>{const tasks=[task(null,'pending','3'),task('2026-10-27','pending','2'),task('2026-10-26','pending','1'),task('2026-10-28','pending','4')];expect(selectTasks(tasks,'pending','QUIET','smart','2026-10-27').map(t=>t.id)).toEqual(['1','2','3']);expect(selectTasks(tasks,'upcoming','','smart','2026-10-27').map(t=>t.id)).toEqual(['4']);});
-  it('orders completed tasks by completion and newest by creation',()=>{const a=task(null,'completed','a'),b={...task(null,'completed','b'),completedAt:'2026-10-28T00:00:00Z',createdAt:'2026-10-28T00:00:00Z'};expect(selectTasks([a,b],'completed','','smart','2026-10-27')[0].id).toBe('b');expect(selectTasks([a,b],'all','','created','2026-10-27')[0].id).toBe('b');});
+import { describe, expect, it } from "vitest";
+import {
+  classify,
+  dateLabel,
+  isOverdue,
+  localDate,
+  selectTasks,
+  type Task,
+} from "./tasks";
+const task = (
+  dueDate: string | null,
+  status: Task["status"] = "pending",
+  id = "1",
+): Task => ({
+  id,
+  title: "Read a book",
+  description: "A quiet hour",
+  dueDate,
+  status,
+  createdAt: "2026-10-27T03:00:00Z",
+  updatedAt: "2026-10-27T03:00:00Z",
+  completedAt: status === "completed" ? "2026-10-27T04:00:00Z" : null,
+});
+describe("calendar-based views", () => {
+  it("assigns exactly one view regardless of due date", () => {
+    for (const due of [null, "2026-10-26", "2026-10-27", "2026-10-28"]) {
+      const t = task(due);
+      expect(classify(t, "2026-10-27")).toBe(
+        due && due > "2026-10-27" ? "upcoming" : "pending",
+      );
+      expect(classify({ ...t, status: "completed" }, "2026-10-27")).toBe(
+        "completed",
+      );
+    }
+  });
+  it("flags only incomplete tasks before today", () => {
+    expect(isOverdue(task("2026-10-26"), "2026-10-27")).toBe(true);
+    for (const t of [
+      task(null),
+      task("2026-10-27"),
+      task("2026-10-28"),
+      task("2026-10-26", "completed"),
+    ])
+      expect(isOverdue(t, "2026-10-27")).toBe(false);
+  });
+  it("uses local date components near midnight rather than ISO UTC", () => {
+    const local = new Date(2026, 9, 27, 0, 1);
+    expect(localDate(local)).toBe("2026-10-27");
+    expect(dateLabel("2027-01-01", "2026-12-31")).toBe("Tomorrow");
+    expect(dateLabel("2026-11-02", "2026-11-01")).toBe("Tomorrow");
+  });
+  it("filters descriptions case-insensitively and orders overdue, today, undated", () => {
+    const tasks = [
+      task(null, "pending", "3"),
+      task("2026-10-27", "pending", "2"),
+      task("2026-10-26", "pending", "1"),
+      task("2026-10-28", "pending", "4"),
+    ];
+    expect(
+      selectTasks(tasks, "pending", "QUIET", "smart", "2026-10-27").map(
+        (t) => t.id,
+      ),
+    ).toEqual(["1", "2", "3"]);
+    expect(
+      selectTasks(tasks, "upcoming", "", "smart", "2026-10-27").map(
+        (t) => t.id,
+      ),
+    ).toEqual(["4"]);
+  });
+  it("orders completed tasks by completion and newest by creation", () => {
+    const a = task(null, "completed", "a"),
+      b = {
+        ...task(null, "completed", "b"),
+        completedAt: "2026-10-28T00:00:00Z",
+        createdAt: "2026-10-28T00:00:00Z",
+      };
+    expect(
+      selectTasks([a, b], "completed", "", "smart", "2026-10-27")[0].id,
+    ).toBe("b");
+    expect(selectTasks([a, b], "all", "", "created", "2026-10-27")[0].id).toBe(
+      "b",
+    );
+  });
 });

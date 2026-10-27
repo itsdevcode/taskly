@@ -23,6 +23,7 @@ jobs:
           workspaces: src-tauri
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+      - run: pnpm format:check
       - run: pnpm test
       - run: pnpm exec playwright install chromium
       - run: pnpm test:e2e

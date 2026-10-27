@@ -10,7 +10,9 @@
     "test": "vitest run",
     "check": "tsc -b",
     "tauri": "tauri",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "format": "prettier --write src e2e *.ts *.json .github README.md src-tauri/tauri.conf.json src-tauri/capabilities/default.json",
+    "format:check": "prettier --check src e2e *.ts *.json .github README.md src-tauri/tauri.conf.json src-tauri/capabilities/default.json"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.8.0",

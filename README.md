@@ -25,6 +25,7 @@ cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
 cargo test --locked --manifest-path src-tauri/Cargo.toml
 cargo clippy --locked --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
 pnpm tauri build
+node scripts/native-smoke.mjs
 ```
 
 The Windows NSIS installer is generated in `src-tauri/target/release/bundle/nsis/`. It installs for the current user. Public releases should use your own Windows signing certificate; this project's local installer is unsigned. GitHub Actions runs the frontend, browser, Rust, formatting and Clippy checks, builds the installer, and uploads it as an artifact. It does not publish a release automatically.
@@ -59,12 +60,14 @@ For a native smoke test: run `pnpm tauri dev`, create undated, yesterday, today 
 
 ## Implementation phases
 
-| Phase | Main files and behavior | Verification | Suggested branch / commit |
-| --- | --- | --- | --- |
-| 1 Foundation | `package.json`, Vite/TS configuration, `src-tauri/tauri.conf.json`, `db/`, migration, icons | Install dependencies; frontend build; database tests | `feat/foundation` / `chore: initialize Taskly desktop foundation` |
-| 2 Backend | `models/`, `error.rs`, `repository/`, `services/`, `commands/`, Rust tests | `cargo test --manifest-path src-tauri/Cargo.toml` | `feat/task-backend` / `feat: add SQLite task service and commands` |
-| 3 Interface | `App.tsx`, `Dialog.tsx`, `TaskForm.tsx`, `app.css`, `api.ts` | Form/browser tests and native CRUD smoke test | `feat/task-interface` / `feat: build task workspace and editing flows` |
-| 4 Productivity | `tasks.ts`, shortcuts, search/sorts, themes, error/empty states | Frontend/browser tests; keyboard and theme checks | `feat/productivity` / `feat: add search shortcuts and appearance settings` |
-| 5 Release | Tests, lockfiles, this README, `.github/workflows/ci.yml` | All checks above; `pnpm tauri build` | `chore/release` / `chore: verify and package Taskly for Windows` |
+| Phase          | Main files and behavior                                                                     | Verification                                         | Suggested branch / commit                                                  |
+| -------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------- |
+| 1 Foundation   | `package.json`, Vite/TS configuration, `src-tauri/tauri.conf.json`, `db/`, migration, icons | Install dependencies; frontend build; database tests | `feat/foundation` / `chore: initialize Taskly desktop foundation`          |
+| 2 Backend      | `models/`, `error.rs`, `repository/`, `services/`, `commands/`, Rust tests                  | `cargo test --manifest-path src-tauri/Cargo.toml`    | `feat/task-backend` / `feat: add SQLite task service and commands`         |
+| 3 Interface    | `App.tsx`, `Dialog.tsx`, `TaskForm.tsx`, `app.css`, `api.ts`                                | Form/browser tests and native CRUD smoke test        | `feat/task-interface` / `feat: build task workspace and editing flows`     |
+| 4 Productivity | `tasks.ts`, shortcuts, search/sorts, themes, error/empty states                             | Frontend/browser tests; keyboard and theme checks    | `feat/productivity` / `feat: add search shortcuts and appearance settings` |
+| 5 Release      | Tests, lockfiles, this README, `.github/workflows/ci.yml`                                   | All checks above; `pnpm tauri build`                 | `chore/release` / `chore: verify and package Taskly for Windows`           |
 
 Suggested branches/commits are documentation; the project does not automatically create Git branches or commits.
+
+The optional native smoke script launches the compiled Windows app with a process-scoped WebView2 debugging port, creates a uniquely named temporary task, restarts Taskly to verify real SQLite persistence, completes it, and deletes it. Run it with other Taskly instances closed. Browser test screenshots are written to `artifacts/`, including a screenshot of the native app. The debugging flag is set only by the smoke script, not by normal app launches.
