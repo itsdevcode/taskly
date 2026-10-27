@@ -2,5 +2,5 @@
   "identifier": "default",
   "description": "Main window core permissions",
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "permissions": ["core:default", "core:window:allow-destroy"]
 }

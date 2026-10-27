@@ -20,7 +20,11 @@ pub fn run() {
             commands::delete_task,
             commands::get_task,
             commands::list_tasks,
-            commands::set_task_status
+            commands::set_task_status,
+            commands::list_pages,
+            commands::create_page,
+            commands::update_page,
+            commands::delete_page
         ])
         .run(tauri::generate_context!());
     if let Err(error) = result {

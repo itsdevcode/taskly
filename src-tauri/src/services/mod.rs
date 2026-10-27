@@ -5,6 +5,7 @@ use crate::{
 };
 use chrono::{NaiveDate, SecondsFormat, Utc};
 use rusqlite::Connection;
+pub mod pages;
 fn now() -> String {
     Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true)
 }

@@ -5,6 +5,8 @@ test.beforeEach(async ({ page }) => {
     const store: Record<string, unknown>[] = [];
     Object.defineProperty(window, "__TAURI_INTERNALS__", {
       value: {
+        metadata: { currentWindow: { label: "main" } },
+        transformCallback: () => 0,
         invoke: async (
           command: string,
           args: {
@@ -15,6 +17,8 @@ test.beforeEach(async ({ page }) => {
         ) => {
           const now = new Date().toISOString();
           if (command === "list_tasks") return structuredClone(store);
+          if (command.startsWith("plugin:event|")) return 1;
+          if (command === "list_pages") return [];
           if (command === "create_task") {
             const task = {
               id: crypto.randomUUID(),
